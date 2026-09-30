@@ -1,0 +1,21 @@
+{
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/*.pyo": true,
+    "**/*.pyd": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/.tox": true,
+    "**/.nox": true,
+    "**/.venv": true,
+    "**/venv": true,
+    "**/env": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/*.egg-info": true,
+    "**/.coverage": true,
+    "**/htmlcov": true
+  }
+}
