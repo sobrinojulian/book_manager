@@ -7,6 +7,14 @@
 - Carla Carrizo
 - Julian Sobrino
 
+## Instrucciones
+```powershell
+git clone https://github.com/sobrinojulian/book_manager
+cd .\book_manager\
+$env:PYTHONPATH = "src"
+python -m book_manager.main
+```
+
 ## Introducción y Contexto del problema
 
 Una librería con venta al público necesita modernizar su sistema de gestión de inventario de libros. Debido a la fluctuación en los costos de importación de material bibliográfico, el sistema debe gestionar precios en diferentes monedas y seguir de cerca la cotización del dólar para actualizar sus valores en tiempo real.
