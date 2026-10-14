@@ -31,6 +31,7 @@ class ConexionDB:
     parsed_url = database_url if isinstance(database_url, URL) else make_url(
       database_url
     )
+    parsed_url = parsed_url.difference_update_query(["pgbouncer"])
     if parsed_url.drivername in ("postgres", "postgresql"):
       parsed_url = parsed_url.set(drivername="postgresql+psycopg")
 
