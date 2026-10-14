@@ -1,0 +1,10 @@
+INSERT INTO editoriales (id, nombre, pais) VALUES (1, 'Planeta', 'Argentina');
+INSERT INTO editoriales (id, nombre, pais) VALUES (2, 'Sudamericana', 'Argentina');
+INSERT INTO editoriales (id, nombre, pais) VALUES (3, 'Penguin Random House', 'España');
+INSERT INTO editoriales (id, nombre, pais) VALUES (4, 'Anagrama', 'España');
+INSERT INTO editoriales (id, nombre, pais) VALUES (5, 'Alfaguara', 'España');
+INSERT INTO editoriales (id, nombre, pais) VALUES (6, 'Paidós', 'Argentina');
+INSERT INTO editoriales (id, nombre, pais) VALUES (7, 'Emecé', 'Argentina');
+INSERT INTO editoriales (id, nombre, pais) VALUES (8, 'Siglo XXI', 'Argentina');
+INSERT INTO editoriales (id, nombre, pais) VALUES (9, 'Tusquets', 'España');
+INSERT INTO editoriales (id, nombre, pais) VALUES (10, 'Edhasa', 'Argentina');
