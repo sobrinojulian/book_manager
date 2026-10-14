@@ -2,9 +2,14 @@
 from __future__ import annotations
 
 import json
+import os
+import unicodedata
 import urllib.request
-from datetime import date
+from datetime import date, datetime
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+from dotenv import load_dotenv
 
 from book_manager.entities.entities import (
   CotizacionDolar,
@@ -27,7 +32,38 @@ from book_manager.repositories.repositories import (
   RepositorioTipoCotizacion,
 )
 
-URL_API_DOLAR: str = "https://dolarapi.com/v1/dolares"
+_RUTA_ENV = Path(__file__).resolve().parents[3] / ".env"
+load_dotenv(dotenv_path=_RUTA_ENV)
+URL_API_DOLAR: str = os.getenv(
+  "API_URL", "https://dolarapi.com/v1/dolares"
+)
+
+_ALIAS_TIPOS_API = {
+  "bolsa": "mep",
+  "dolarbolsa": "mep",
+  "contadoconliqui": "ccl",
+  "contadoconliquidacion": "ccl",
+  "solidario": "ahorro",
+}
+
+
+def _normalizar_nombre_tipo(nombre: str) -> str:
+  normalizado = unicodedata.normalize("NFKD", nombre.casefold())
+  return "".join(caracter for caracter in normalizado if caracter.isalnum())
+
+
+def _fecha_cotizacion(item: Dict, fecha_actual: date) -> date:
+  fecha = item.get("fechaActualizacion") or item.get("fecha")
+  if not fecha:
+    return fecha_actual
+  try:
+    return datetime.fromisoformat(
+      str(fecha).replace("Z", "+00:00")
+    ).date()
+  except ValueError as error:
+    raise ValueError(
+      f"Fecha de cotización inválida recibida de la API: {fecha!r}."
+    ) from error
 
 
 class ServicioCotizacion:
@@ -58,16 +94,77 @@ class ServicioCotizacion:
         peticion, timeout=5
       ) as respuesta:
         datos: List[Dict] = json.loads(respuesta.read())
+      if not isinstance(datos, list):
+        raise ValueError("La API del dólar devolvió un formato inesperado.")
+      nombre_normalizado = _normalizar_nombre_tipo(nombre_tipo)
       for item in datos:
-        if str(item.get("nombre", "")).lower() == (
-          nombre_tipo.lower()
-        ):
-          compra: float = float(item.get("compra", 0.0) or 0.0)
-          venta: float = float(item.get("venta", 0.0) or 0.0)
-          return compra, venta
+        if not isinstance(item, dict):
+          continue
+        nombre_api = _normalizar_nombre_tipo(
+          str(item.get("nombre", ""))
+        )
+        nombre_api = _ALIAS_TIPOS_API.get(nombre_api, nombre_api)
+        if nombre_api == nombre_normalizado:
+          return float(item["compra"]), float(item["venta"])
       return None
-    except Exception:
+    except (OSError, ValueError, KeyError, TypeError):
       return None
+
+  def obtener_cotizaciones(self) -> List[CotizacionDolar]:
+    """Descarga y registra las cotizaciones para los tipos configurados."""
+    peticion = urllib.request.Request(
+      URL_API_DOLAR,
+      headers={"User-Agent": "Mozilla/5.0"},
+    )
+    with urllib.request.urlopen(peticion, timeout=5) as respuesta:
+      datos = json.loads(respuesta.read())
+    if not isinstance(datos, list):
+      raise ValueError("La API del dólar devolvió un formato inesperado.")
+
+    tipos_por_nombre = {
+      _normalizar_nombre_tipo(tipo.nombre): tipo
+      for tipo in self._repo_tipo.leer_todos()
+    }
+    cotizaciones: List[CotizacionDolar] = []
+    hoy = date.today()
+
+    for item in datos:
+      if not isinstance(item, dict):
+        continue
+      nombre_api = _normalizar_nombre_tipo(str(item.get("nombre", "")))
+      nombre_tipo = _ALIAS_TIPOS_API.get(nombre_api, nombre_api)
+      tipo = tipos_por_nombre.get(nombre_tipo)
+      if tipo is None:
+        continue
+
+      try:
+        valor_compra = float(item["compra"])
+        valor_venta = float(item["venta"])
+      except (KeyError, TypeError, ValueError) as error:
+        raise ValueError(
+          f"La cotización recibida para {tipo.nombre!r} no contiene "
+          "valores válidos de compra y venta."
+        ) from error
+
+      fecha = _fecha_cotizacion(item, hoy)
+      existente = self._repo_cotizacion.leer_por_tipo_y_fecha(
+        tipo.id, fecha.isoformat()
+      )
+      if existente is None:
+        cotizacion = CotizacionDolar(
+          tipo=tipo,
+          fecha=fecha,
+          valor_compra=valor_compra,
+          valor_venta=valor_venta,
+        )
+        cotizacion = self._repo_cotizacion.crear(cotizacion)
+      else:
+        existente.valor_compra = valor_compra
+        existente.valor_venta = valor_venta
+        cotizacion = self._repo_cotizacion.actualizar(existente)
+      cotizaciones.append(cotizacion)
+
+    return cotizaciones
 
   def registrar_cotizacion(
     self,
@@ -89,6 +186,13 @@ class ServicioCotizacion:
       valor_compra=valor_compra,
       valor_venta=valor_venta,
     )
+    existente = self._repo_cotizacion.leer_por_tipo_y_fecha(
+      tipo_id, fecha_real
+    )
+    if existente is not None:
+      existente.valor_compra = valor_compra
+      existente.valor_venta = valor_venta
+      return self._repo_cotizacion.actualizar(existente)
     return self._repo_cotizacion.crear(cotizacion)
 
   def obtener_ultima_cotizacion(
@@ -101,6 +205,9 @@ class ServicioCotizacion:
     if not historico:
       return None
     return max(historico, key=lambda c: c.fecha)
+
+
+ServicioCotizacionDolar = ServicioCotizacion
 
 
 class ServicioPrecio:

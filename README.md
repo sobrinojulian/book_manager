@@ -14,8 +14,9 @@ cd .\book_manager\
 $env:PYTHONPATH = "src"
 python -m book_manager.main
 ```
+## Sprint 1
 
-## Introducción y Contexto del problema
+### Introducción y Contexto del problema
 
 Una librería con venta al público necesita modernizar su sistema de gestión de inventario de libros. Debido a la fluctuación en los costos de importación de material bibliográfico, el sistema debe gestionar precios en diferentes monedas y seguir de cerca la cotización del dólar para actualizar sus valores en tiempo real.
 
@@ -34,7 +35,8 @@ Para cumplir con el requerimiento, se han identificado las siguientes entidades:
 - Stock: cantidad disponible de cada libro.
 - Cotizacion: registro histórico de las cotizaciones por tipo y fecha.
 
-## ✅ Ejercicio 01
+
+### Ejercicio 01
 
 > Puntos: 1
 
@@ -64,7 +66,7 @@ book_manager/
 └── requirements.txt
 ```
 
-## ✅ Ejercicio 02
+### Ejercicio 02
 
 > Puntos: 2
 
@@ -73,7 +75,7 @@ Definir la/s clase/s entidad necesarias para el uso del sistema (Libro, Genero, 
 Archivo/s de trabajo:
 - book_manager/entities/entities.py
 
-## ✅ Ejercicio 03
+### Ejercicio 03
 
 > Puntos: 2
 
@@ -287,7 +289,7 @@ class IRepositorioCotizacionDolar(abc.ABC):
     pass
 ```
 
-## ✅ Ejercicio 04
+### Ejercicio 04
 
 > Puntos: 2
 
@@ -297,7 +299,7 @@ Archivo/s de trabajo:
 - book_manager/services/services.py
 
 
-## ✅ Punto 05
+### Ejercicio 05
 
 > Puntos: 1
 
@@ -309,7 +311,7 @@ Archivo/s de trabajo:
 - book_manager/preload_data/preload_data.py
 
 
-## ✅ Punto 06
+### Ejercicio 06
 
 > Puntos: 1
 
@@ -318,7 +320,7 @@ Armar las interfaces gráficas del sistema, estas deben operar con los CRUD de c
 Archivo/s de trabajo:
 - book_manager/ui/console.py
 
-## ✅ Punto 07
+### Ejercicio 07
 
 > Puntos: 1
 
@@ -326,3 +328,161 @@ Crear el archivo main.py que se encarga de ejecutar el sistema.
 
 Archivo/s de trabajo:
 - book_manager/main.py
+
+### Devolucion
+Ejercicios:
+* Observaciones generales:
+    - Se trabajó sobre la rama main y se debe trabajar sobre "Sprint_1".
+    - No se realizó el commit por día, el error se arrastra en todos los ejercicios.
+
+Calificación por ejercicios y puntos:
+- Ejercicio 01: 0,3 pto.
+- Ejercicio 02: 1,8 pto.
+- Ejercicio 03: 1,8 pto.
+- Ejercicio 04: 1,4 pto.
+**Observaciones**: Los Servicios que manejan clases con relación entre clases (por ejemplo Libro) no válidan que las clases relanacionadas sean válidas.
+- Ejercicio 05: 0,8 pto.
+- Ejercicio 06: 0,8 pto.
+- Ejercicio 07: 0,8 pto.
+
+Descuenta por nombre de archivo incorrecto. -0,5 pto.
+Descuenta por no ejecutar completo (run all) y no se continua con la corrección. -0,25 pto.
+Descuenta por no subir ejecutado -0,25 pto.
+Descuenta por no utilizar la plantilla del trabajo práctico. -0,5 pto.
+Descuenta por no entregar el archivo "ipynb" -1 pto.
+
+## Sprint 2
+### Ejercicio 01
+
+> Puntos: 1
+
+Inicialización y configuración de la herramienta de versionado. Vamos a trabajar sobre la rama llamada "Sprint_2" y debemos partir de la rama "Sprint_1".
+
+La estructura de directorios es:
+
+```
+book_manager/
+├── src/
+│   └── book_manager/
+│       ├── database/
+│       │   └── connection.py
+│       ├── entities/
+│       │   └── entities.py
+│       ├── models/
+│       │   └── models.py
+│       ├── preload_data/
+│       │   └── preload_data.py
+│       ├── repositories/
+│       │   └── repositories.py
+│       ├── services/
+│       │   └── services.py
+│       ├── migrations
+│       │   ├── csv
+│       │   └── sql
+│       ├── ui/
+│       │   └── console.py
+│       └── main.py
+├── .env
+├── CHANGELOG.md
+├── README.md
+└── requirements.txt
+```
+
+### Ejercicio 02
+
+> Puntos: 1
+
+Crear una clase ConexionDB que maneje la conexión usando SQLAlchemy.
+
+Archivo/s de trabajo:
+- book_manager/database/connection.py
+
+### Ejercicio 03
+
+> Puntos: 1
+
+Crear un context manager para manejar las transacciones a la base de datos.
+
+Archivo/s de trabajo:
+- book_manager/database/connection.py
+
+
+### Ejercicio 04
+
+> Puntos: 1
+
+Crear las tablas del sistema con sus tipos de datos y relaciones.
+
+Archivo/s de trabajo:
+- book_manager/models/models.py
+
+### Ejercicio 05
+
+> Puntos: 1
+
+Migración de datos.
+
+Leer el/los archivos del TP1 y poblar la base de datos.
+
+Durante la migración se deben generar archivos `.sql` con las sentencias de la inserción de datos y se deben almacenar dentro de la estructura planteada.
+
+Archivo/s de trabajo:
+- book_manager/migrations/migrations.py
+
+
+Tomar como base el siguiente código:
+
+```python
+def migrar_datos(carpeta_csvs: str, carpeta_sqls: str):
+  """ Función encargada de la migración de datos de csv a sql.
+  Se encarga de leer los archivos csv y crear los archivos sql
+  para la inserción en la base de datos.
+
+  Args:
+      carpeta_csvs (str): Carpeta donde se encuentran los archivos csv de origen.
+      carpeta_sqls (str): Carpeta donde se deben guardar los archivos sql generados.
+  """
+  pass
+```
+
+### Ejercicio 06
+
+> Puntos: 2
+
+Realizar la modificaciones necesarias para que todo el sistema utilice base de datos.
+
+Archivo/s de trabajo:
+- book_manager/repositories/repositories.py
+
+
+### Ejercicio 07
+
+> Puntos: 2
+
+API del dólar + dotenv
+
+Crear un archivo `.env` con URL de la API.
+```
+API_URL=https://dolarapi.com/v1/dolares
+```
+
+Crear una función `obtener_cotizaciones` dentro del servicio `ServicioCotizacionDolar` capaz de buscar, descargar y registrar las cotizaciones en la base de datos.
+
+Archivo/s de trabajo:
+- book_manager/services/services.py
+
+
+### Ejercicio 08
+
+> Puntos: 1
+
+Agregar las siguientes opciones de menú:
+
+- Obtener las cotizaciones por api
+
+- Ver la lista de precios bimonetaria de los libros, es decir, en pesos y en otra moneda seleccionada
+
+- Exportar los precios a archivo CSV para todos los tipos de monedas
+
+Archivo/s de trabajo:
+- book_manager/ui/console.py

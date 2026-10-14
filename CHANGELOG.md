@@ -45,3 +45,15 @@ planteados en el README.
 
 - Se añadió `.gitignore` para excluir cachés de Python, entornos virtuales y artefactos locales.
 - Se configuró `.vscode/settings.json` para ocultar cachés y salidas generadas en el Explorador de VS Code.
+
+## Integración con base de datos y nuevas funciones
+
+- Se incorporó `ConexionDB` con SQLAlchemy para administrar sesiones y transacciones, cargar la configuración desde `.env` y conectarse a PostgreSQL/Supabase mediante `psycopg`.
+- Se normalizó la URL de conexión para descartar el parámetro `pgbouncer`, que no es una opción válida del driver PostgreSQL.
+- Se definieron los modelos ORM de las ocho entidades, con tipos de datos, relaciones, claves foráneas y restricciones de integridad.
+- Se reemplazó la persistencia CSV de los repositorios por operaciones CRUD en la base de datos, conservando las entidades de dominio y las consultas de stock e historial de cotizaciones.
+- Se agregó la migración desde los CSV del TP1: genera scripts `.sql`, crea las tablas faltantes e importa los datos. Para claves naturales duplicadas conserva el primer registro, remapea referencias y suma las cantidades de stock.
+- Se incorporó la URL configurable de la API del dólar desde `.env` y el servicio para descargar y guardar cotizaciones, actualizar los registros del mismo tipo y fecha y reconocer variantes conocidas de la API.
+- Se añadieron opciones de consola para obtener cotizaciones por API, consultar precios en pesos y otra moneda seleccionada, y exportar a CSV los precios de todas las monedas.
+- Se declararon SQLAlchemy, `psycopg` y `python-dotenv` como dependencias del proyecto.
+- Se validaron la creación de tablas, las operaciones CRUD, la integridad referencial, la migración y las nuevas funciones con pruebas locales sobre SQLite y respuestas de API simuladas.

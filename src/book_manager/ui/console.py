@@ -1,7 +1,11 @@
 """Menús de texto para operar el inventario de la librería."""
 from __future__ import annotations
 
+import csv
+from pathlib import Path
 from typing import Optional
+
+from sqlalchemy.exc import SQLAlchemyError
 
 from book_manager.entities.entities import (
   Editorial, Genero, Libro, Moneda, TipoCotizacion,
@@ -288,6 +292,133 @@ def menu_stock(
     print(f"Existencias actualizadas: {actualizado}")
   except ValueError as error:
     print(f"No se pudo ajustar el inventario: {error}")
+
+
+def menu_obtener_cotizaciones(
+  servicio_cotizacion: ServicioCotizacion,
+) -> None:
+  """Descarga cotizaciones de la API y las registra en la base de datos."""
+  print("\n--- Actualización de cotizaciones por API ---")
+  try:
+    cotizaciones = servicio_cotizacion.obtener_cotizaciones()
+  except (OSError, ValueError, SQLAlchemyError) as error:
+    print(f"No se pudieron obtener o guardar las cotizaciones: {error}")
+    return
+
+  if not cotizaciones:
+    print("La API no devolvió cotizaciones para los tipos configurados.")
+    return
+
+  print(f"Se registraron {len(cotizaciones)} cotizaciones:")
+  for cotizacion in cotizaciones:
+    print(f"  {cotizacion}")
+
+
+def menu_precios_bimonetarios(
+  repo_precio: RepositorioPrecio,
+  repo_libro: RepositorioLibro,
+  repo_moneda: RepositorioMoneda,
+) -> None:
+  """Muestra los precios en ARS y en una moneda elegida."""
+  monedas = [
+    moneda for moneda in repo_moneda.leer_todos()
+    if moneda.codigo != "ARS"
+  ]
+  if not monedas:
+    print("No hay monedas disponibles además de ARS.")
+    return
+
+  print("\n--- Monedas para la consulta bimonetaria ---")
+  for moneda in monedas:
+    print(f"  [{moneda.id}] {moneda.codigo} - {moneda.nombre}")
+  try:
+    moneda_id = int(input("Identificador de la moneda: "))
+  except ValueError:
+    print("El identificador debe ser un número.")
+    return
+
+  moneda_seleccionada = next(
+    (moneda for moneda in monedas if moneda.id == moneda_id),
+    None,
+  )
+  if moneda_seleccionada is None:
+    print(f"No se encontró una moneda con identificador {moneda_id}.")
+    return
+
+  libros = repo_libro.leer_todos()
+  precios_por_libro_y_moneda = {
+    (precio.libro.id, precio.moneda.codigo): precio.monto
+    for precio in repo_precio.leer_todos()
+  }
+  print(
+    f"\n--- Precios en ARS y {moneda_seleccionada.codigo} ---"
+  )
+  if not libros:
+    print("No hay libros registrados.")
+    return
+
+  for libro in libros:
+    precio_ars = precios_por_libro_y_moneda.get((libro.id, "ARS"))
+    precio_otro = precios_por_libro_y_moneda.get(
+      (libro.id, moneda_seleccionada.codigo)
+    )
+    importe_ars = (
+      f"{precio_ars:.2f}" if precio_ars is not None else "Sin precio"
+    )
+    importe_otro = (
+      f"{precio_otro:.2f}" if precio_otro is not None else "Sin precio"
+    )
+    print(
+      f"  [{libro.id}] {libro.titulo}: "
+      f"ARS {importe_ars} | {moneda_seleccionada.codigo} {importe_otro}"
+    )
+
+
+def menu_exportar_precios_csv(
+  repo_precio: RepositorioPrecio,
+) -> None:
+  """Exporta todos los precios registrados, sin filtrar por moneda."""
+  ruta_ingresada = input(
+    "Ruta del archivo CSV [precios_exportados.csv]: "
+  ).strip()
+  ruta = Path(ruta_ingresada or "precios_exportados.csv")
+
+  try:
+    precios = sorted(
+      repo_precio.leer_todos(),
+      key=lambda precio: (
+        precio.libro.id or 0,
+        precio.moneda.codigo,
+      ),
+    )
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    with ruta.open("w", newline="", encoding="utf-8-sig") as archivo:
+      escritor = csv.writer(archivo)
+      escritor.writerow([
+        "libro_id",
+        "isbn",
+        "titulo",
+        "autor",
+        "codigo_moneda",
+        "nombre_moneda",
+        "monto",
+      ])
+      for precio in precios:
+        escritor.writerow([
+          precio.libro.id,
+          precio.libro.isbn,
+          precio.libro.titulo,
+          precio.libro.autor,
+          precio.moneda.codigo,
+          precio.moneda.nombre,
+          f"{precio.monto:.2f}",
+        ])
+  except (OSError, SQLAlchemyError) as error:
+    print(f"No se pudo exportar el archivo CSV: {error}")
+    return
+
+  print(f"Se exportaron {len(precios)} precios a: {ruta.resolve()}")
+
 
 def menu_cotizaciones(
   servicio_cotizacion: ServicioCotizacion,

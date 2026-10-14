@@ -39,7 +39,6 @@ nosetests.xml
 
 # Logs and local environment/secrets
 *.log
-.env
 .env.*
 !.env.example
 

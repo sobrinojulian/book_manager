@@ -26,7 +26,10 @@ from book_manager.ui.console import (
   menu_generos,
   menu_libros,
   menu_monedas,
+  menu_obtener_cotizaciones,
+  menu_exportar_precios_csv,
   menu_precios,
+  menu_precios_bimonetarios,
   menu_stock,
   menu_tipos_cotizacion,
 )
@@ -40,6 +43,9 @@ OPCIONES_MENU: str = """
 5) Libros
 6) Precios
 7) Stock
+8) Obtener las cotizaciones por API
+9) Ver precios bimonetarios
+10) Exportar precios a CSV
 0) Salir
 ========================="""
 
@@ -100,10 +106,14 @@ def main(import_default_data: bool = True) -> None:
       )
     elif opcion == "7":
       menu_stock(servicio_stock, repo_stock)
-    #elif opcion == "8":
-    #  menu_cotizaciones(
-    #    servicio_cotizacion, repo_cotizacion, repo_tipo
-    #  )
+    elif opcion == "8":
+      menu_obtener_cotizaciones(servicio_cotizacion)
+    elif opcion == "9":
+      menu_precios_bimonetarios(
+        repo_precio, repo_libro, repo_moneda
+      )
+    elif opcion == "10":
+      menu_exportar_precios_csv(repo_precio)
     elif opcion == "0":
       print("La sesión ha finalizado. ¡Hasta la próxima!")
       break
