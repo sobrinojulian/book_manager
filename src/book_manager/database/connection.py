@@ -35,7 +35,15 @@ class ConexionDB:
     if parsed_url.drivername in ("postgres", "postgresql"):
       parsed_url = parsed_url.set(drivername="postgresql+psycopg")
 
-    self.engine: Engine = create_engine(parsed_url)
+    # Supabase transaction pooling does not preserve named prepared statements.
+    connect_args = (
+      {"prepare_threshold": None}
+      if parsed_url.drivername == "postgresql+psycopg"
+      else {}
+    )
+    self.engine: Engine = create_engine(
+      parsed_url, connect_args=connect_args
+    )
     self._session_factory = sessionmaker(
       bind=self.engine, expire_on_commit=False
     )
