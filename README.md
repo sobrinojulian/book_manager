@@ -599,3 +599,16 @@ La tabla de auditoria debe registrar:
 - fecha
 
 - detalles
+
+### Ejercicio 07
+
+> Puntos: 1
+
+Agregar las siguientes opciones de menú:
+
+
+- Ejecutar scraping
+
+- Generar reporte
+
+- Ver historial de auditoría

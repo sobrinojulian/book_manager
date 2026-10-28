@@ -34,6 +34,11 @@
 - Se agregó la tabla `auditorias` y un repositorio para consultar los eventos más recientes; la opción **Ver historial de auditoría** quedó disponible en el menú.
 - Se verificaron con SQLite en memoria el registro de altas, consultas y eliminaciones, incluso cuando la consulta no encuentra un registro.
 
+## Ejercicio 07 — Opciones de menú
+
+- Se agregaron las opciones **Ejecutar scraping**, **Generar reporte** y **Ver historial de auditoría** al menú principal.
+- La opción **Generar reporte** crea el Excel de comparación a partir de la extracción JSONL más reciente guardada en `reportes/`.
+
 
 ## Trabajo Práctico 2
 Registro de avances del Trabajo Práctico 2, organizado según los ejercicios

@@ -42,6 +42,77 @@ def _parse_precio(valor: Any) -> Decimal | None:
   return precio if precio.is_finite() and precio >= 0 else None
 
 
+def _guardar_reporte(filas: list[tuple[Any, ...]], ruta_excel: Path) -> None:
+  libro = Workbook()
+  hoja: Any = libro.active
+  hoja.title = "Comparación de precios"
+  hoja.append([
+    "Libro",
+    "Precio interno",
+    "Precio web",
+    "Diferencia",
+    "Fecha de extracción",
+  ])
+  for fila in filas:
+    hoja.append(fila)
+
+  hoja.freeze_panes = "A2"
+  hoja.auto_filter.ref = hoja.dimensions
+  for celda in hoja[1]:
+    celda.font = Font(bold=True)
+  for fila in hoja.iter_rows(min_row=2, min_col=2, max_col=4):
+    for celda in fila:
+      celda.number_format = '"$"#,##0.00;[Red]-"$"#,##0.00'
+  for celda in hoja["E"][1:]:
+    celda.number_format = "yyyy-mm-dd hh:mm:ss"
+  for columna, ancho in {
+    "A": 45,
+    "B": 18,
+    "C": 18,
+    "D": 18,
+    "E": 22,
+  }.items():
+    hoja.column_dimensions[columna].width = ancho
+  libro.save(ruta_excel)
+
+
+def generar_reporte_desde_jsonl(ruta_resultados: Path) -> Path:
+  """Genera el Excel de comparación a partir de una extracción guardada."""
+  fecha_extraccion = datetime.fromtimestamp(
+    ruta_resultados.stat().st_mtime
+  ).astimezone().replace(tzinfo=None)
+  filas = []
+  with ruta_resultados.open(encoding="utf-8") as archivo:
+    for linea in archivo:
+      if not linea.strip():
+        continue
+      item = json.loads(linea)
+      precio_interno = _parse_precio(item.get("precio_interno_ars"))
+      precio_web = _parse_precio(item.get("precio"))
+      diferencia = (
+        precio_web - precio_interno
+        if precio_interno is not None and precio_web is not None
+        else None
+      )
+      filas.append((
+        item.get("titulo_catalogo") or item.get("titulo_cuspide", ""),
+        float(precio_interno) if precio_interno is not None else None,
+        float(precio_web) if precio_web is not None else None,
+        float(diferencia) if diferencia is not None else None,
+        fecha_extraccion,
+      ))
+
+  if not filas:
+    raise ValueError("La extracción seleccionada no contiene resultados.")
+
+  nombre_reporte = ruta_resultados.name.replace(
+    "cuspide_", "reporte_precios_cuspide_", 1
+  ).replace(".jsonl", ".xlsx")
+  ruta_excel = ruta_resultados.with_name(nombre_reporte)
+  _guardar_reporte(filas, ruta_excel)
+  return ruta_excel
+
+
 class CuspideJsonPipeline:
   """Guarda resultados JSONL y alertas de diferencias en archivos CSV."""
 
@@ -116,41 +187,10 @@ class CuspideJsonPipeline:
   def close_spider(self, spider: Spider) -> None:
     self._archivo.close()
     self._archivo_alertas.close()
-    libro = Workbook()
-    hoja: Any = libro.active
-    hoja.title = "Comparación de precios"
-    hoja.append([
-      "Libro",
-      "Precio interno",
-      "Precio web",
-      "Diferencia",
-      "Fecha de extracción",
-    ])
-    for fila in self._filas_reporte:
-      hoja.append(fila)
-
-    hoja.freeze_panes = "A2"
-    hoja.auto_filter.ref = hoja.dimensions
-    for celda in hoja[1]:
-      celda.font = Font(bold=True)
-    for fila in hoja.iter_rows(min_row=2, min_col=2, max_col=4):
-      for celda in fila:
-        celda.number_format = '"$"#,##0.00;[Red]-"$"#,##0.00'
-    for celda in hoja["E"][1:]:
-      celda.number_format = "yyyy-mm-dd hh:mm:ss"
-    for columna, ancho in {
-      "A": 45,
-      "B": 18,
-      "C": 18,
-      "D": 18,
-      "E": 22,
-    }.items():
-      hoja.column_dimensions[columna].width = ancho
-
     ruta_excel = Path(self._archivo.name).with_name(
       Path(self._archivo.name).name.replace(
         "cuspide_", "reporte_precios_cuspide_"
       ).replace(".jsonl", ".xlsx")
     )
-    libro.save(ruta_excel)
+    _guardar_reporte(self._filas_reporte, ruta_excel)
     spider.logger.info("El reporte Excel se guarda en %s", ruta_excel)

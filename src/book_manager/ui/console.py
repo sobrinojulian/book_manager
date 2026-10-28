@@ -31,6 +31,7 @@ from book_manager.services.services import (
   ServicioPrecio,
   ServicioStock,
 )
+from book_manager.scraper.pipelines import generar_reporte_desde_jsonl
 
 
 def _confirmar_accion(mensaje: str) -> bool:
@@ -100,6 +101,25 @@ def menu_historial_auditoria(repo_auditoria: RepositorioAuditoria) -> None:
       f"[{registro.fecha.isoformat()}] {registro.accion}: "
       f"{registro.detalles}"
     )
+
+
+def menu_generar_reporte() -> None:
+  """Regenera el Excel de la extracción de Cúspide más reciente."""
+  directorio_reportes = (
+    Path(__file__).resolve().parents[2] / "reportes"
+  )
+  extracciones = list(directorio_reportes.glob("cuspide_*.jsonl"))
+  if not extracciones:
+    print("No hay extracciones guardadas para generar un reporte.")
+    return
+
+  ultima_extraccion = max(extracciones, key=lambda ruta: ruta.stat().st_mtime)
+  try:
+    ruta_reporte = generar_reporte_desde_jsonl(ultima_extraccion)
+  except (OSError, ValueError) as error:
+    print(f"No se pudo generar el reporte: {error}")
+    return
+  print(f"Reporte generado: {ruta_reporte}")
 
 
 def menu_generos(repo_genero: RepositorioGenero) -> None:

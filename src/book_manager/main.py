@@ -26,6 +26,7 @@ from book_manager.ui.console import (
   menu_editoriales,
   menu_ejecutar_scraper_cuspide,
   menu_generos,
+  menu_generar_reporte,
   menu_historial_auditoria,
   menu_libros,
   menu_monedas,
@@ -49,8 +50,9 @@ OPCIONES_MENU: str = """
 8) Obtener las cotizaciones por API
 9) Ver precios bimonetarios
 10) Exportar precios a CSV
-11) Comparar precios con Cúspide
-12) Ver historial de auditoría
+11) Ejecutar scraping
+12) Generar reporte
+13) Ver historial de auditoría
 0) Salir
 ========================="""
 
@@ -123,6 +125,8 @@ def main(import_default_data: bool = True) -> None:
     elif opcion == "11":
       menu_ejecutar_scraper_cuspide()
     elif opcion == "12":
+      menu_generar_reporte()
+    elif opcion == "13":
       menu_historial_auditoria(repo_auditoria)
     elif opcion == "0":
       print("La sesión ha finalizado. ¡Hasta la próxima!")
