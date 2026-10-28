@@ -28,6 +28,12 @@
 - Los reportes se guardan en `reportes/`; se añadió `openpyxl` a las dependencias del proyecto.
 - Se verificó la generación y reapertura de un reporte de prueba, incluyendo sus encabezados, valores y fecha.
 
+## Ejercicio 06 — Auditoría del sistema
+
+- Se incorporó el decorador `auditar_operacion` para registrar las operaciones de los repositorios, incluyendo su acción, fecha y detalles en formato JSON.
+- Se agregó la tabla `auditorias` y un repositorio para consultar los eventos más recientes; la opción **Ver historial de auditoría** quedó disponible en el menú.
+- Se verificaron con SQLite en memoria el registro de altas, consultas y eliminaciones, incluso cuando la consulta no encuentra un registro.
+
 
 ## Trabajo Práctico 2
 Registro de avances del Trabajo Práctico 2, organizado según los ejercicios

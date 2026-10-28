@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import abc
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Generic, Optional, TypeVar
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from book_manager.auditoria import auditar_operacion, detalles_a_json
 from book_manager.database.connection import ConexionDB
 from book_manager.entities.entities import (
   CotizacionDolar,
@@ -22,6 +23,7 @@ from book_manager.entities.entities import (
 )
 from book_manager.models.models import (
   Base,
+  Auditoria as ModeloAuditoria,
   CotizacionDolar as ModeloCotizacionDolar,
   Editorial as ModeloEditorial,
   Genero as ModeloGenero,
@@ -49,6 +51,24 @@ def _fecha_como_date(valor: date | str) -> date:
   if isinstance(valor, date):
     return valor
   return date.fromisoformat(valor)
+
+
+class RepositorioAuditoria:
+  """Consulta los eventos persistidos sin auditar la consulta del historial."""
+
+  def __init__(self, conexion: ConexionDB | None = None) -> None:
+    self._conexion = conexion or _conexion_por_defecto()
+    Base.metadata.create_all(self._conexion.engine)
+
+  def leer_todos(self, limite: int = 100) -> list[ModeloAuditoria]:
+    with self._conexion.transaccion() as sesion:
+      return list(sesion.scalars(
+        select(ModeloAuditoria)
+        .order_by(
+          ModeloAuditoria.fecha.desc(), ModeloAuditoria.id.desc()
+        )
+        .limit(limite)
+      ).all())
 
 
 class IRepositorio(abc.ABC, Generic[T]):
@@ -134,6 +154,16 @@ class RepositorioSQLBase(IRepositorio[T], Generic[T, M]):
     self._conexion = conexion or _conexion_por_defecto()
     Base.metadata.create_all(self._conexion.engine)
 
+  def _registrar_auditoria(
+    self, accion: str, detalles: dict[str, object]
+  ) -> None:
+    with self._conexion.transaccion() as sesion:
+      sesion.add(ModeloAuditoria(
+        accion=accion,
+        fecha=datetime.now(timezone.utc),
+        detalles=detalles_a_json(detalles),
+      ))
+
   @abc.abstractmethod
   def _crear_modelo(self, entidad: T) -> M:
     """Construye el modelo ORM correspondiente a una entidad de dominio."""
@@ -146,6 +176,7 @@ class RepositorioSQLBase(IRepositorio[T], Generic[T, M]):
   def _a_entidad(self, modelo: M) -> T:
     """Convierte el modelo ORM en una entidad de dominio."""
 
+  @auditar_operacion
   def crear(self, entidad: T) -> T:
     with self._conexion.transaccion() as sesion:
       modelo = self._crear_modelo(entidad)
@@ -154,11 +185,13 @@ class RepositorioSQLBase(IRepositorio[T], Generic[T, M]):
       entidad.id = modelo.id
     return entidad
 
+  @auditar_operacion
   def leer_por_id(self, id: int) -> Optional[T]:
     with self._conexion.transaccion() as sesion:
       modelo = sesion.get(self.modelo, id)
       return self._a_entidad(modelo) if modelo is not None else None
 
+  @auditar_operacion
   def leer_todos(self) -> list[T]:
     with self._conexion.transaccion() as sesion:
       modelos = sesion.scalars(
@@ -166,6 +199,7 @@ class RepositorioSQLBase(IRepositorio[T], Generic[T, M]):
       ).all()
       return [self._a_entidad(modelo) for modelo in modelos]
 
+  @auditar_operacion
   def actualizar(self, entidad: T) -> T:
     with self._conexion.transaccion() as sesion:
       modelo = sesion.get(self.modelo, entidad.id)
@@ -176,6 +210,7 @@ class RepositorioSQLBase(IRepositorio[T], Generic[T, M]):
       self._actualizar_modelo(modelo, entidad)
     return entidad
 
+  @auditar_operacion
   def eliminar(self, id: int) -> bool:
     with self._conexion.transaccion() as sesion:
       modelo = sesion.get(self.modelo, id)
@@ -432,6 +467,7 @@ class RepositorioStock(
       cantidad=modelo.cantidad,
     )
 
+  @auditar_operacion
   def leer_por_libro(self, libro_id: int) -> Optional[Stock]:
     with self._conexion.transaccion() as sesion:
       modelo = sesion.scalar(
@@ -439,6 +475,7 @@ class RepositorioStock(
       )
       return self._a_entidad(modelo) if modelo is not None else None
 
+  @auditar_operacion
   def eliminar(self, libro_id: int) -> bool:
     with self._conexion.transaccion() as sesion:
       modelo = sesion.scalar(
@@ -497,6 +534,7 @@ class RepositorioCotizacionDolar(
       valor_venta=float(modelo.valor_venta),
     )
 
+  @auditar_operacion
   def leer_por_tipo_y_fecha(
     self, tipo_id: int, fecha: str
   ) -> Optional[CotizacionDolar]:
@@ -509,6 +547,7 @@ class RepositorioCotizacionDolar(
       )
       return self._a_entidad(modelo) if modelo is not None else None
 
+  @auditar_operacion
   def leer_historico_por_tipo(
     self, tipo_id: int
   ) -> list[CotizacionDolar]:
@@ -520,6 +559,7 @@ class RepositorioCotizacionDolar(
       ).all()
       return [self._a_entidad(modelo) for modelo in modelos]
 
+  @auditar_operacion
   def eliminar(self, tipo_id: int, fecha: str) -> bool:
     with self._conexion.transaccion() as sesion:
       modelo = sesion.scalar(

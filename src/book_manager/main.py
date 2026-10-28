@@ -5,6 +5,7 @@ from book_manager.preload_data.preload_data import (
   cargar_datos_iniciales,
 )
 from book_manager.repositories.repositories import (
+  RepositorioAuditoria,
   RepositorioCotizacionDolar,
   RepositorioEditorial,
   RepositorioGenero,
@@ -25,6 +26,7 @@ from book_manager.ui.console import (
   menu_editoriales,
   menu_ejecutar_scraper_cuspide,
   menu_generos,
+  menu_historial_auditoria,
   menu_libros,
   menu_monedas,
   menu_obtener_cotizaciones,
@@ -48,6 +50,7 @@ OPCIONES_MENU: str = """
 9) Ver precios bimonetarios
 10) Exportar precios a CSV
 11) Comparar precios con Cúspide
+12) Ver historial de auditoría
 0) Salir
 ========================="""
 
@@ -62,6 +65,7 @@ def main(import_default_data: bool = True) -> None:
   repo_precio = RepositorioPrecio(repo_libro, repo_moneda)
   repo_stock = RepositorioStock(repo_libro)
   repo_cotizacion = RepositorioCotizacionDolar(repo_tipo)
+  repo_auditoria = RepositorioAuditoria(repo_genero._conexion)
 
   servicio_cotizacion = ServicioCotizacion(
     repo_cotizacion, repo_tipo
@@ -118,6 +122,8 @@ def main(import_default_data: bool = True) -> None:
       menu_exportar_precios_csv(repo_precio)
     elif opcion == "11":
       menu_ejecutar_scraper_cuspide()
+    elif opcion == "12":
+      menu_historial_auditoria(repo_auditoria)
     elif opcion == "0":
       print("La sesión ha finalizado. ¡Hasta la próxima!")
       break

@@ -582,3 +582,20 @@ Generar un reporte en excel con los siguientes campos
 - Diferencia
 
 - Fecha de extracción
+
+### Ejercicio 06
+
+> Puntos: 2
+
+Crear un decorador para manejar las auditorias del sistema, cada operación debe estar auditada.
+
+Modificar todo lo necesario.
+
+
+La tabla de auditoria debe registrar:
+
+- acción
+
+- fecha
+
+- detalles

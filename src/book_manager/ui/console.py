@@ -16,6 +16,7 @@ from book_manager.entities.entities import (
 )
 from book_manager.repositories.repositories import (
   RepositorioCotizacionDolar,
+  RepositorioAuditoria,
   RepositorioEditorial,
   RepositorioGenero,
   RepositorioLibro,
@@ -85,6 +86,20 @@ def menu_ejecutar_scraper_cuspide() -> None:
     "La ejecución finalizó. El CSV de alertas está en: "
     f"{raiz_proyecto / 'src' / 'book_manager' / 'reportes'}"
   )
+
+
+def menu_historial_auditoria(repo_auditoria: RepositorioAuditoria) -> None:
+  """Muestra los eventos más recientes registrados en el sistema."""
+  print("\n--- Historial de auditoría ---")
+  registros = repo_auditoria.leer_todos()
+  if not registros:
+    print("Todavía no hay operaciones auditadas.")
+    return
+  for registro in registros:
+    print(
+      f"[{registro.fecha.isoformat()}] {registro.accion}: "
+      f"{registro.detalles}"
+    )
 
 
 def menu_generos(repo_genero: RepositorioGenero) -> None:
