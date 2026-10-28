@@ -486,3 +486,51 @@ Agregar las siguientes opciones de menú:
 
 Archivo/s de trabajo:
 - book_manager/ui/console.py
+
+## Sprint 3
+
+En esta tercer entrega vamos a descargar y obtener datos de la web para trabajar con ellos.
+
+La idea es obtener precios de nuestros competidores (librerías con venta online) y de esta forma poder compararnos con ellos y competir de forma más informada.
+
+Para todo esto debemos partir del último push que se realizó en la entrega 2.
+
+### Ejercicio 01
+
+> Puntos: 1
+
+Inicialización y configuración de la herramienta de versionado. Vamos a trabajar sobre la rama llamada "Sprint_3" y debemos partir de la rama "Sprint_2".
+
+La estructura de directorios es:
+
+```
+book_manager/
+├── src/
+│   └── book_manager/
+│       ├── database/
+│       │   └── connection.py
+│       ├── entities/
+│       │   └── entities.py
+│       ├── models/
+│       │   └── models.py
+│       ├── preload_data/
+│       │   └── preload_data.py
+│       ├── repositories/
+│       │   └── repositories.py
+│       ├── scraper
+│       │   └── (estructura del scraper scrapy)
+│       ├── services/
+│       │   └── services.py
+│       ├── migrations
+│       │   ├── csv
+│       │   └── sql
+│       ├── reportes
+│       │   └── (reportes excel generados)
+│       ├── ui/
+│       │   └── console.py
+│       └── main.py
+├── .env
+├── CHANGELOG.md
+├── README.md
+└── requirements.txt
+```
