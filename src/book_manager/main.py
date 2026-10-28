@@ -23,6 +23,7 @@ from book_manager.services.services import (
 from book_manager.ui.console import (
   menu_cotizaciones,
   menu_editoriales,
+  menu_ejecutar_scraper_cuspide,
   menu_generos,
   menu_libros,
   menu_monedas,
@@ -46,6 +47,7 @@ OPCIONES_MENU: str = """
 8) Obtener las cotizaciones por API
 9) Ver precios bimonetarios
 10) Exportar precios a CSV
+11) Comparar precios con Cúspide
 0) Salir
 ========================="""
 
@@ -114,6 +116,8 @@ def main(import_default_data: bool = True) -> None:
       )
     elif opcion == "10":
       menu_exportar_precios_csv(repo_precio)
+    elif opcion == "11":
+      menu_ejecutar_scraper_cuspide()
     elif opcion == "0":
       print("La sesión ha finalizado. ¡Hasta la próxima!")
       break

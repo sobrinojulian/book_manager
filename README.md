@@ -556,3 +556,12 @@ Solo vamos a trabajar con nuestros libros, es decir, solo debo buscar los 10 pri
 Implementar:
  - Loaders
  - Pipelines
+
+
+### Ejercicio 04
+
+> Puntos: 1
+
+Comparar el precio interno con el precio web y generar alertas.
+
+Cada vez que se ejecuta el scraper se debe generar un archivo de alertas del tipo CSV que se debe poder descargar para analizar los precios. La diferencia de precios debe ser ingresada por el usuario antes de cada ejecución del scraper.

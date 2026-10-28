@@ -1,3 +1,4 @@
+from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
 import scrapy
@@ -7,6 +8,8 @@ from book_manager.repositories.repositories import (
   RepositorioEditorial,
   RepositorioGenero,
   RepositorioLibro,
+  RepositorioMoneda,
+  RepositorioPrecio,
 )
 from book_manager.scraper.loaders import CuspideLoader
 
@@ -17,6 +20,20 @@ class CuspideSpider(scrapy.Spider):
   base_url = "https://cuspide.com/"
   max_resultados_por_libro = 10
 
+  def __init__(
+    self,
+    diferencia_minima_ars: str = "0",
+    *args,
+    **kwargs,
+  ):
+    try:
+      self.diferencia_minima_ars = Decimal(diferencia_minima_ars)
+    except InvalidOperation as error:
+      raise ValueError("La diferencia mínima debe ser un número válido.") from error
+    if not self.diferencia_minima_ars.is_finite() or self.diferencia_minima_ars < 0:
+      raise ValueError("La diferencia mínima debe ser mayor o igual a cero.")
+    super().__init__(*args, **kwargs)
+
   def start_requests(self):
     repo_libros = RepositorioLibro(
       RepositorioEditorial(), RepositorioGenero()
@@ -25,6 +42,13 @@ class CuspideSpider(scrapy.Spider):
     if not libros:
       self.logger.warning("El catálogo no contiene libros para buscar.")
       return
+
+    repo_precio = RepositorioPrecio(repo_libros, RepositorioMoneda())
+    precios_ars = {
+      precio.libro.id: precio.monto
+      for precio in repo_precio.leer_todos()
+      if precio.moneda.codigo == "ARS"
+    }
 
     for libro in libros:
       url = safe_url_string(
@@ -38,6 +62,11 @@ class CuspideSpider(scrapy.Spider):
             "id": libro.id,
             "isbn": libro.isbn,
             "titulo": libro.titulo,
+            "precio_interno_ars": (
+              f"{precios_ars[libro.id]:.2f}"
+              if libro.id in precios_ars
+              else None
+            ),
           }
         },
       )
@@ -66,6 +95,7 @@ class CuspideSpider(scrapy.Spider):
     loader.add_value("libro_id", libro["id"])
     loader.add_value("isbn_catalogo", libro["isbn"])
     loader.add_value("titulo_catalogo", libro["titulo"])
+    loader.add_value("precio_interno_ars", libro["precio_interno_ars"])
     loader.add_value(
       "titulo_cuspide",
       response.css("h1.product_title::text, h1.entry-title::text").get(),

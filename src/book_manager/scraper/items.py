@@ -7,6 +7,7 @@ class CuspideItem(scrapy.Item):
   titulo_catalogo = scrapy.Field()
   titulo_cuspide = scrapy.Field()
   url_producto = scrapy.Field()
+  precio_interno_ars = scrapy.Field()
   precio = scrapy.Field()
   url_imagen = scrapy.Field()
   formas_pago = scrapy.Field()

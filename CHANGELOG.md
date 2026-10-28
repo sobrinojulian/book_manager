@@ -16,6 +16,12 @@
 - Se añadió un pipeline que exporta los resultados a archivos JSON Lines dentro de `reportes/`, junto con la configuración del proyecto Scrapy y su dependencia.
 - Se verificaron el descubrimiento del spider, el límite de resultados, la extracción de datos y la escritura del pipeline con respuestas simuladas; no se ejecutó una búsqueda contra la base de datos ni el sitio en vivo.
 
+## Ejercicio 04 — Comparación de precios y alertas
+
+- Se agregó una opción de menú que solicita en cada ejecución la diferencia mínima en ARS y lanza el scraper con ese umbral.
+- Se incorporó la comparación entre precio interno y precio web, y la generación por ejecución de un CSV fechado en `reportes/` con las diferencias que superan el umbral.
+- Se verificaron el parseo de importes, el filtrado por umbral, la escritura del CSV y el descubrimiento del spider con pruebas simuladas; no se realizó una búsqueda real contra la base de datos ni el sitio.
+
 
 ## Trabajo Práctico 2
 Registro de avances del Trabajo Práctico 2, organizado según los ejercicios

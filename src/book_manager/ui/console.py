@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import csv
+import os
 from pathlib import Path
+import subprocess
+import sys
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -32,6 +36,55 @@ def _confirmar_accion(mensaje: str) -> bool:
   """Solicita confirmación antes de continuar con una operación."""
   respuesta: str = input(f"{mensaje} [s/n]: ").strip().lower()
   return respuesta == "s"
+
+
+def menu_ejecutar_scraper_cuspide() -> None:
+  """Solicita el umbral y ejecuta el spider en un proceso independiente."""
+  valor_ingresado = input(
+    "Alertar cuando la diferencia supere este valor (ARS): "
+  ).strip().replace(",", ".")
+  try:
+    umbral = Decimal(valor_ingresado)
+  except InvalidOperation:
+    print("La diferencia debe ser un número válido.")
+    return
+  if not umbral.is_finite() or umbral < 0:
+    print("La diferencia debe ser mayor o igual a cero.")
+    return
+
+  raiz_proyecto = Path(__file__).resolve().parents[3]
+  entorno = os.environ.copy()
+  ruta_src = str(raiz_proyecto / "src")
+  rutas_python = [ruta_src, entorno.get("PYTHONPATH", "")]
+  entorno["PYTHONPATH"] = os.pathsep.join(
+    ruta for ruta in rutas_python if ruta
+  )
+  comando = [
+    sys.executable,
+    "-m",
+    "scrapy",
+    "crawl",
+    "cuspide",
+    "-a",
+    f"diferencia_minima_ars={umbral}",
+  ]
+
+  try:
+    resultado = subprocess.run(
+      comando, cwd=raiz_proyecto, env=entorno, check=False
+    )
+  except OSError as error:
+    print(f"No se pudo ejecutar el scraper: {error}")
+    return
+
+  if resultado.returncode != 0:
+    print("El scraper finalizó con errores; revise el registro anterior.")
+    return
+
+  print(
+    "La ejecución finalizó. El CSV de alertas está en: "
+    f"{raiz_proyecto / 'src' / 'book_manager' / 'reportes'}"
+  )
 
 
 def menu_generos(repo_genero: RepositorioGenero) -> None:
