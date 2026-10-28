@@ -565,3 +565,20 @@ Implementar:
 Comparar el precio interno con el precio web y generar alertas.
 
 Cada vez que se ejecuta el scraper se debe generar un archivo de alertas del tipo CSV que se debe poder descargar para analizar los precios. La diferencia de precios debe ser ingresada por el usuario antes de cada ejecución del scraper.
+
+
+### Ejercicio 05
+
+> Puntos: 1
+
+Generar un reporte en excel con los siguientes campos
+
+- Libro
+
+- Precio interno
+
+- Precio web
+
+- Diferencia
+
+- Fecha de extracción

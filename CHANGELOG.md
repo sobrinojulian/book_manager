@@ -22,6 +22,12 @@
 - Se incorporó la comparación entre precio interno y precio web, y la generación por ejecución de un CSV fechado en `reportes/` con las diferencias que superan el umbral.
 - Se verificaron el parseo de importes, el filtrado por umbral, la escritura del CSV y el descubrimiento del spider con pruebas simuladas; no se realizó una búsqueda real contra la base de datos ni el sitio.
 
+## Ejercicio 05 — Reporte de precios en Excel
+
+- Se agregó la generación de un archivo Excel por ejecución del scraper, con el libro, el precio interno, el precio web, la diferencia y la fecha de extracción.
+- Los reportes se guardan en `reportes/`; se añadió `openpyxl` a las dependencias del proyecto.
+- Se verificó la generación y reapertura de un reporte de prueba, incluyendo sus encabezados, valores y fecha.
+
 
 ## Trabajo Práctico 2
 Registro de avances del Trabajo Práctico 2, organizado según los ejercicios
