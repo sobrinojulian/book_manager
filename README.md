@@ -534,3 +534,10 @@ book_manager/
 ├── README.md
 └── requirements.txt
 ```
+
+### Ejercicio 02
+
+> Puntos: 1
+
+Crear una función para cargar los datos desde un sql.
+

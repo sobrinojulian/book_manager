@@ -8,7 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Date, Integer, Numeric, insert
+from sqlalchemy import Date, Integer, Numeric, insert, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql.schema import UniqueConstraint
 
@@ -160,6 +160,49 @@ def _crear_sentencias(
   return sentencias
 
 
+def cargar_datos_sql(carpeta_sqls: str) -> dict[str, int]:
+  """Carga los INSERT de los archivos SQL en el orden de sus dependencias.
+
+  Cada sentencia debe ocupar una línea; las líneas vacías y los comentarios
+  SQL se ignoran. Toda la carga se ejecuta en una única transacción.
+  """
+  origen = Path(carpeta_sqls)
+  archivos: list[tuple[str, Path]] = []
+  for nombre_csv, modelo in _MIGRACIONES:
+    ruta_sql = origen / Path(nombre_csv).with_suffix(".sql")
+    if not ruta_sql.is_file():
+      raise FileNotFoundError(f"No se encontró el archivo SQL: {ruta_sql}")
+    archivos.append((modelo.__tablename__, ruta_sql))
+
+  resumen = {tabla: 0 for tabla, _ in archivos}
+  conexion = ConexionDB()
+  try:
+    Base.metadata.create_all(conexion.engine)
+    with conexion.engine.begin() as transaccion:
+      for tabla, ruta_sql in archivos:
+        for linea in ruta_sql.read_text(encoding="utf-8").splitlines():
+          sentencia = linea.strip()
+          if not sentencia or sentencia.startswith("--"):
+            continue
+          transaccion.execute(text(sentencia.removesuffix(";")))
+          resumen[tabla] += 1
+
+      if conexion.engine.dialect.name == "postgresql":
+        for _, modelo in _MIGRACIONES:
+          tabla = modelo.__tablename__
+          transaccion.exec_driver_sql(
+            "SELECT setval("
+            f"pg_get_serial_sequence('{tabla}', 'id'), "
+            f"COALESCE((SELECT MAX(id) FROM {tabla}), 1), "
+            f"EXISTS(SELECT 1 FROM {tabla}))"
+          )
+  finally:
+    conexion.cerrar()
+
+  logging.info("Carga SQL completada: %s", resumen)
+  return resumen
+
+
 def migrar_datos(carpeta_csvs: str, carpeta_sqls: str) -> dict[str, int]:
   """Genera archivos SQL e importa los CSV en la base configurada.
 
@@ -195,32 +238,7 @@ def migrar_datos(carpeta_csvs: str, carpeta_sqls: str) -> dict[str, int]:
       encoding="utf-8",
     )
 
-  conexion = ConexionDB()
-  try:
-    Base.metadata.create_all(conexion.engine)
-    with conexion.engine.begin() as transaccion:
-      for modelo, filas, _ in cargas:
-        for sentencia in _crear_sentencias(modelo, filas):
-          transaccion.exec_driver_sql(sentencia)
-
-      if conexion.engine.dialect.name == "postgresql":
-        for _, modelo in _MIGRACIONES:
-          tabla = modelo.__tablename__
-          transaccion.exec_driver_sql(
-            "SELECT setval("
-            f"pg_get_serial_sequence('{tabla}', 'id'), "
-            f"COALESCE((SELECT MAX(id) FROM {tabla}), 1), "
-            f"EXISTS(SELECT 1 FROM {tabla}))"
-          )
-  finally:
-    conexion.cerrar()
-
-  resumen = {
-    modelo.__tablename__: len(filas)
-    for modelo, filas, _ in cargas
-  }
-  logging.info("Migración completada: %s", resumen)
-  return resumen
+  return cargar_datos_sql(str(destino))
 
 
 if __name__ == "__main__":
