@@ -541,3 +541,18 @@ book_manager/
 
 Crear una función para cargar los datos desde un sql.
 
+### Ejercicio 03
+
+> Puntos: 3
+
+Implementar un scraper (CuspideSpider) con scrapy que obtenga del sitio de Cúspide los siguientes datos:
+- Precio.
+- url de la img.
+- Formas de pago y precio.
+- Descripción detallada.
+
+Solo vamos a trabajar con nuestros libros, es decir, solo debo buscar los 10 primeros resultados de cada búsqueda (por título). No puedo buscar libros que no tengo en mi catálogo.
+
+Implementar:
+ - Loaders
+ - Pipelines

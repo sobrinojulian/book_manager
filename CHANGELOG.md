@@ -9,6 +9,13 @@
 
 - Se incorporó una función para cargar mediante SQLAlchemy los datos de los archivos `.sql` de migración, respetando el orden de dependencias y ejecutando la carga en una única transacción.
 
+## Ejercicio 03 — Scraper de Cúspide
+
+- Se incorporó `CuspideSpider` para buscar únicamente los títulos existentes en el catálogo, con un máximo de 10 productos únicos por búsqueda.
+- Se agregaron un item y un loader para normalizar el precio, la URL de imagen, los medios de pago y la descripción detallada de cada producto.
+- Se añadió un pipeline que exporta los resultados a archivos JSON Lines dentro de `reportes/`, junto con la configuración del proyecto Scrapy y su dependencia.
+- Se verificaron el descubrimiento del spider, el límite de resultados, la extracción de datos y la escritura del pipeline con respuestas simuladas; no se ejecutó una búsqueda contra la base de datos ni el sitio en vivo.
+
 
 ## Trabajo Práctico 2
 Registro de avances del Trabajo Práctico 2, organizado según los ejercicios
