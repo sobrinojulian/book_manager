@@ -34,6 +34,10 @@ class CuspideSpider(scrapy.Spider):
       raise ValueError("La diferencia mínima debe ser mayor o igual a cero.")
     super().__init__(*args, **kwargs)
 
+  async def start(self):
+    for request in self.start_requests():
+      yield request
+
   def start_requests(self):
     repo_libros = RepositorioLibro(
       RepositorioEditorial(), RepositorioGenero()
