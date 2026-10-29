@@ -106,7 +106,7 @@ def menu_historial_auditoria(repo_auditoria: RepositorioAuditoria) -> None:
 def menu_generar_reporte() -> None:
   """Regenera el Excel de la extracción de Cúspide más reciente."""
   directorio_reportes = (
-    Path(__file__).resolve().parents[2] / "reportes"
+    Path(__file__).resolve().parents[1] / "reportes"
   )
   extracciones = list(directorio_reportes.glob("cuspide_*.jsonl"))
   if not extracciones:
