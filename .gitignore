@@ -47,3 +47,6 @@ nosetests.xml
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Reportes
+src/book_manager/reportes/*

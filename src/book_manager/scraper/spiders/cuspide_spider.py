@@ -1,4 +1,6 @@
 from decimal import Decimal, InvalidOperation
+import re
+import unicodedata
 from urllib.parse import urlencode
 
 import scrapy
@@ -12,6 +14,20 @@ from book_manager.repositories.repositories import (
   RepositorioPrecio,
 )
 from book_manager.scraper.loaders import CuspideLoader
+
+
+def _normalizar_titulo(titulo: str) -> tuple[str, ...]:
+  sin_acentos = "".join(
+    caracter
+    for caracter in unicodedata.normalize("NFKD", titulo)
+    if not unicodedata.combining(caracter)
+  )
+  palabras_ignoradas = {"el", "la", "los", "las", "de", "del", "y"}
+  return tuple(
+    palabra
+    for palabra in re.findall(r"[a-z0-9]+", sin_acentos.lower())
+    if palabra not in palabras_ignoradas
+  )
 
 
 class CuspideSpider(scrapy.Spider):
@@ -95,21 +111,41 @@ class CuspideSpider(scrapy.Spider):
       )
 
   def parse_producto(self, response, libro):
+    titulo_cuspide = response.css(
+      "h1.product_title, h1.entry-title"
+    ).xpath("string(.)").get()
+    if _normalizar_titulo(titulo_cuspide or "") != _normalizar_titulo(
+      libro["titulo"]
+    ):
+      self.logger.debug(
+        "Se descarta '%s'; no coincide con '%s'.",
+        titulo_cuspide,
+        libro["titulo"],
+      )
+      return
+
     loader = CuspideLoader()
     loader.add_value("libro_id", libro["id"])
     loader.add_value("isbn_catalogo", libro["isbn"])
     loader.add_value("titulo_catalogo", libro["titulo"])
     loader.add_value("precio_interno_ars", libro["precio_interno_ars"])
-    loader.add_value(
-      "titulo_cuspide",
-      response.css("h1.product_title::text, h1.entry-title::text").get(),
-    )
+    loader.add_value("titulo_cuspide", titulo_cuspide)
     loader.add_value("url_producto", response.url)
 
-    precios = response.css(
-      ".summary .price .amount::text, .summary p.price::text, .product .price .amount::text"
-    ).getall()
-    loader.add_value("precio", precios)
+    bloques_precio = response.css(
+      ".summary .price, .product .price"
+    ).xpath("string(.)").getall()
+    precio_ars = next(
+      (
+        coincidencia.group(1)
+        for texto in bloques_precio
+        if (coincidencia := re.search(
+          r"AR\$\s*([\d.,]+)", texto, re.IGNORECASE
+        ))
+      ),
+      None,
+    )
+    loader.add_value("precio", precio_ars)
 
     imagen = (
       response.css(
