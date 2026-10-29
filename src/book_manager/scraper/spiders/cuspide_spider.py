@@ -140,7 +140,7 @@ class CuspideSpider(scrapy.Spider):
         coincidencia.group(1)
         for texto in bloques_precio
         if (coincidencia := re.search(
-          r"AR\$\s*([\d.,]+)", texto, re.IGNORECASE
+          r"(?:AR\s*)?\$\s*([\d.,]+)", texto, re.IGNORECASE
         ))
       ),
       None,
